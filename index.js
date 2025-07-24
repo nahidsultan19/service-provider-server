@@ -71,8 +71,10 @@ app.get("/", (req, res) => {
   res.send("Server is running");
 });
 
-app.listen(port, () => {
-  console.log(`App ruiing on port: ${port}`);
-});
+module.exports = app;
+
+// app.listen(port, () => {
+//   console.log(`App ruiing on port: ${port}`);
+// });
 // nahid
 // B4XsrE3jePC46T3E
