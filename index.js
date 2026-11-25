@@ -104,30 +104,30 @@ const client = new MongoClient(uri, {
   },
 });
 
-// Variables for DB
-let database;
-let serviceCollection;
+// 1. Create a function that ensures the DB is connected
+let cachedDb = null;
 
-// 1. Connect to DB independently (do not trap routes inside this)
-async function connectDB() {
-  try {
-    await client.connect();
-    database = client.db("serviceDB");
-    serviceCollection = database.collection("Bookings");
-    console.log("✅ Connected to MongoDB");
-  } catch (error) {
-    console.error("❌ MongoDB connection error:", error);
+async function connectToDatabase() {
+  if (cachedDb) {
+    return cachedDb;
   }
+  // If we are not connected, connect now and wait for it
+  await client.connect();
+  const database = client.db("serviceDB");
+  cachedDb = database;
+  return database;
 }
-connectDB();
 
-// 2. Define Routes OUTSIDE the connection function
+// 2. Define routes (Notice we call connectToDatabase() INSIDE every route)
 app.get("/", (req, res) => {
   res.send("Server is running");
 });
 
 app.get("/bookings", async (req, res) => {
   try {
+    const db = await connectToDatabase();
+    const serviceCollection = db.collection("Bookings");
+
     const cursor = serviceCollection.find();
     const result = await cursor.toArray();
     res.send(result);
@@ -138,7 +138,10 @@ app.get("/bookings", async (req, res) => {
 
 app.get("/booking/:email", async (req, res) => {
   try {
-    const email = req.params.email; // Fixed typo: params (plural)
+    const db = await connectToDatabase();
+    const serviceCollection = db.collection("Bookings");
+
+    const email = req.params.email;
     const query = { email: email };
     const result = await serviceCollection.findOne(query);
     res.send(result);
@@ -149,6 +152,9 @@ app.get("/booking/:email", async (req, res) => {
 
 app.post("/bookings", async (req, res) => {
   try {
+    const db = await connectToDatabase();
+    const serviceCollection = db.collection("Bookings");
+
     const booking = req.body;
     console.log("Received booking:", booking);
     const result = await serviceCollection.insertOne(booking);
@@ -160,6 +166,9 @@ app.post("/bookings", async (req, res) => {
 
 app.delete("/booking/:id", async (req, res) => {
   try {
+    const db = await connectToDatabase();
+    const serviceCollection = db.collection("Bookings");
+
     const id = req.params.id;
     const query = { _id: new ObjectId(id) };
     const result = await serviceCollection.deleteOne(query);
@@ -169,12 +178,11 @@ app.delete("/booking/:id", async (req, res) => {
   }
 });
 
-// 3. ONLY listen if running locally (Vercel handles this automatically)
+// 3. Start server locally (Vercel will handle this automatically)
 if (process.env.NODE_ENV !== "production") {
   app.listen(port, () => {
     console.log(`🚀 Local server running on port ${port}`);
   });
 }
 
-// 4. Export the app for Vercel
 module.exports = app;
