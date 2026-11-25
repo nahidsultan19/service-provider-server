@@ -16,6 +16,7 @@ const userName = process.env.USER_NAME;
 const userPassword = process.env.USER_PASSWORD;
 
 const uri = `mongodb+srv://${userName}:${userPassword}@cluster0.chdotmq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+// const uri = `mongodb+srv://${userName}:${userPassword}@cluster0.chdotmq.mongodb.net/`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -63,6 +64,9 @@ async function run() {
     });
   } finally {
     // Ensures that the client will close when you finish/error
+    app.listen(port, () => {
+      console.log(`App ruiing on port: ${port}`);
+    });
   }
 }
 run().catch(console.dir);
@@ -73,8 +77,6 @@ app.get("/", (req, res) => {
 
 module.exports = app;
 
-// app.listen(port, () => {
-//   console.log(`App ruiing on port: ${port}`);
-// });
+
 // nahid
-// B4XsrE3jePC46T3E
+// B4XsrE3jePC46T3E || nahid
